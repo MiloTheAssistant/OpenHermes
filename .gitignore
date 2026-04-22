@@ -1,0 +1,81 @@
+# === SECRETS - NEVER COMMIT ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*token*
+*apikey*
+*api_key*
+*api-key*
+*.secret
+id_rsa
+id_ed25519
+id_dsa
+id_ecdsa
+known_hosts
+.openai-oauth/
+.hermes/auth/
+.hermes/session/
+.aws/
+.gcp/
+.azure/
+gcp-key.json
+aws-credentials
+service-account*.json
+secrets/
+credentials/
+.secrets
+.credentials
+
+# === RUNTIME STATE / PII ===
+workspace/memory/*.md
+!workspace/memory/.gitkeep
+!workspace/memory/README.md
+workspace/memory/archive/
+workspace/telemetry/
+governance/audit/*.jsonl
+logs/
+*.log
+*.pid
+
+# === PYTHON / NODE BUILD ARTIFACTS ===
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# === DOCKER / LOCAL RUNTIME OVERRIDES ===
+.docker-compose.override.yml
+docker-compose.override.yml
+.orbstack/
+
+# === EDITORS / LOCAL IDE STATE ===
+.vscode/settings.json
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+
+# === OS NOISE ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === TEST / SCAN OUTPUTS ===
+.secrets.baseline.new
+gitleaks-report.*
+bandit-report.*
+coverage.*
+htmlcov/

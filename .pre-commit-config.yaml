@@ -1,0 +1,66 @@
+# Pre-commit configuration for public-repo hygiene and secret scanning.
+# Install:
+#   python3 -m pip install pre-commit
+#   pre-commit install --hook-type pre-commit --hook-type pre-push
+# Run once across the scaffold:
+#   pre-commit run --all-files
+# Confirm the detect-secrets baseline is valid:
+#   detect-secrets scan --baseline .secrets.baseline
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        stages:
+          - pre-commit
+          - pre-push
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args:
+          - --baseline
+          - .secrets.baseline
+          - --exclude-files
+          - (^|/)package-lock\.json$
+          - --exclude-files
+          - ^\.secrets\.baseline$
+        stages:
+          - pre-commit
+          - pre-push
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args:
+          - --maxkb=1024
+        stages:
+          - pre-commit
+          - pre-push
+      - id: check-merge-conflict
+        stages:
+          - pre-commit
+          - pre-push
+      - id: detect-private-key
+        stages:
+          - pre-commit
+          - pre-push
+      - id: check-yaml
+        stages:
+          - pre-commit
+          - pre-push
+      - id: check-json
+        stages:
+          - pre-commit
+          - pre-push
+      - id: end-of-file-fixer
+        stages:
+          - pre-commit
+          - pre-push
+      - id: trailing-whitespace
+        stages:
+          - pre-commit
+          - pre-push
