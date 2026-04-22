@@ -1,0 +1,76 @@
+defaults:
+  simple_answer_owner: Milo
+  orchestration_owner: Milo  # Phase 5: Milo absorbed Elon — no separate orchestrator
+
+# Profiles define both the agent set and the execution sequence.
+# Brackets [] within a sequence indicate parallel execution.
+# See Router_Profiles.md for narrative descriptions.
+#
+# Delegation model (Phase 5):
+#   John → Milo (intake, complexity score, dispatch)
+#   Milo orchestrates sequentially, dispatching to specialists via
+#   sessions_spawn with agentId. Multi-step workflows loop back through
+#   Milo between steps so he can compile results and deliver to John.
+#   HALT authority belongs exclusively to Milo.
+
+profiles:
+  intelligence:
+    agents: [Sagan, Hermes, Cortana]
+    sequence:
+      - Sagan                    # gather signals + synthesize
+      - Hermes                   # package and distribute (Discord, Telegram, email)
+      - Cortana                  # log state
+    notes: "Milo dispatches Sagan, compiles result, then dispatches Hermes for delivery."
+
+  engineering:
+    agents: [Neo, Cornelius, Sentinel, Cortana]
+    sequence:
+      - Neo                      # architecture and technical design
+      - Cornelius                # execution plan with rollback (runs solo on ~48GB)
+      - Sentinel                 # QA gate
+      - Cortana                  # log state
+    notes: "Milo approves any execution after Sentinel clears. Cornelius-only lane: all other local models unload."
+
+  comms:
+    agents: [Hermes, Sentinel, Cortana]
+    sequence:
+      - Hermes                   # draft Discord/Telegram/email
+      - Sentinel                 # QA on outbound content (conditional)
+      - Cortana                  # log delivery
+    notes: "Simple outbound comms from Milo. Sentinel review triggers only on brand-sensitive content or new channels."
+
+  research:
+    agents: [Sagan, Sentinel, Cortana]
+    sequence:
+      - Sagan                    # deep research and synthesis
+      - Sentinel                 # QA on citations and confidence (conditional)
+      - Cortana                  # log findings to 2Brain
+    notes: "Pure research with no external distribution. Output lands in 2Brain/outputs or 2Brain/wiki."
+
+  governance:
+    agents: [Sentinel, Cortana]
+    sequence:
+      - Sentinel                 # evaluate pending output
+      - Cortana                  # log decision
+    notes: "Quality gate for anything produced outside a standard workflow."
+
+rules:
+  # Milo answers directly only for trivial requests (no tool calls, no ambiguity)
+  - when: trivial_and_no_tools
+    route_to: Milo
+  # Cross-domain or multi-step: Milo orchestrates sequentially
+  - when: cross_domain_or_multi_step
+    route_to: Milo
+  - when: research_required
+    enforce: Sagan
+  - when: outbound_comms
+    route_to: Hermes
+  - when: system_change
+    route_sequence: [Neo, Cornelius]
+  - when: heavy_local_coding
+    route_to: Cornelius
+    note: "Cornelius exclusive — unloads all other local models"
+  - when: critical_or_complex_coding
+    note: "Escalate to Claude Code directly — outside harness"
+  - when: output_quality_check
+    enforce: Sentinel

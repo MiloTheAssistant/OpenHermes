@@ -1,0 +1,225 @@
+defaults:
+  system_execution: approval-required
+  filesystem_access: controlled-write
+  external_apis: scoped
+
+tool_registry:
+  # --- State & Orchestration Tools ---
+  read_state:
+    type: internal
+    description: Read-only access to Cortana state store
+    implementation: openclaw_function
+    function: cortana.read_state
+    permissions: [read]
+
+  routing_controls:
+    type: internal
+    description: Set TIER_CAP, PARALLEL_CAP, RISK_MODE, HALT
+    implementation: openclaw_function
+    function: milo.routing_controls
+    permissions: [read, write_policy]
+
+  sessions_spawn:
+    type: internal
+    description: Dispatch to a named specialist (sagan, neo, hermes, sentinel, cortana, cornelius) via agentId
+    implementation: openclaw_gateway
+    function: gateway.sessions_spawn
+    permissions: [dispatch]
+    notes: "Milo's primary dispatch mechanism. Never spawn without agentId — anonymous subagents lack tool access."
+
+  state_log:
+    type: internal
+    description: Write state updates, log completions/failures
+    implementation: openclaw_function
+    function: cortana.state_log
+    permissions: [read, write]
+    auto_write: true  # Cortana may log automatically per State_Schema.md
+
+  artifact_registry:
+    type: internal
+    description: Register and retrieve generated artifacts
+    implementation: openclaw_function
+    function: cortana.artifact_registry
+    permissions: [read, write]
+
+  # --- Research & Web Tools ---
+  web_read:
+    type: openclaw_plugin
+    description: Search the web and extract readable content
+    implementation: "@ollama/openclaw-web-search"
+    install: openclaw plugins install @ollama/openclaw-web-search
+    requires_auth: true  # ollama signin required
+    permissions: [read]
+
+  web_fetch:
+    type: openclaw_plugin
+    description: Fetch specific URLs and extract content (no JS execution)
+    implementation: "@ollama/openclaw-web-search"
+    permissions: [read]
+
+  docs_read:
+    type: openclaw_function
+    description: Read local documents, PDFs, and 2Brain wiki/briefings
+    implementation: filesystem_read
+    base_path: ~/repos/2Brain/
+    permissions: [read]
+
+  synthesis:
+    type: internal
+    description: Multi-source evidence aggregation and conflict resolution
+    implementation: agent_capability
+    notes: Not a discrete tool — Sagan's core LLM capability driven by prompt
+    permissions: [read]
+
+  # --- Engineering Tools ---
+  code_read:
+    type: openclaw_function
+    description: Read and analyze code repositories and files
+    implementation: filesystem_read
+    base_path: ~/repos/
+    permissions: [read]
+
+  architecture:
+    type: internal
+    description: Produce architecture briefs, dependency maps, tradeoff analysis
+    implementation: agent_capability
+    notes: Neo's core LLM capability driven by prompt
+    permissions: [read]
+
+  plan_shell:
+    type: internal
+    description: Generate shell command execution plans (never execute directly)
+    implementation: agent_capability
+    notes: Cornelius produces plans only — execution requires MILO approval
+    permissions: [read]
+    restrictions:
+      - no_direct_execution
+      - approval_required_from: Milo
+
+  plan_filesystem:
+    type: internal
+    description: Generate filesystem change plans with rollback
+    implementation: agent_capability
+    notes: Cornelius produces plans only — execution requires MILO approval
+    permissions: [read]
+    restrictions:
+      - no_direct_execution
+      - approval_required_from: Milo
+
+  code_execute:
+    type: agent_capability
+    description: "Cornelius workspace coding — write scripts, modify files, run tests"
+    implementation: cornelius_workspace
+    permissions: [read, write]
+    restrictions:
+      - "MILO approval required for filesystem changes outside Cornelius workspace"
+      - "Never modify OpenClawMaster files directly"
+      - "Never execute shell commands without plan approval"
+    workspace: ~/.openclaw/workspace-cornelius/
+
+  # --- Comms & Distribution Tools (Hermes owns all outbound) ---
+  discord_post:
+    type: api
+    description: Post to Discord channels via webhook
+    implementation: discord_webhook
+    config:
+      server: "Milo's World"
+      channels:
+        dfb: "#dfb"
+      webhook_url_env: DISCORD_WEBHOOK_URL
+    permissions: [write]
+    restrictions:
+      - requires_standing_approval_or_manual_mode
+      - hermes_only
+
+  telegram_post:
+    type: api
+    description: Post to Telegram channels via bot API
+    implementation: telegram_bot
+    config:
+      bot_token_env: TELEGRAM_BOT_TOKEN
+    permissions: [write]
+    restrictions:
+      - requires_standing_approval_or_manual_mode
+      - hermes_only
+
+  email_draft:
+    type: api
+    description: Draft email via Gmail MCP (never sends directly — John sends)
+    implementation: gmail_mcp
+    config:
+      mcp_config_dir: ~/.gmail-mcp-milo
+    permissions: [write]
+    restrictions:
+      - hermes_only
+      - john_sends_never_hermes
+
+  x_post:
+    type: api
+    description: Post to X.com (manual only until API integration complete)
+    implementation: x_api
+    status: pending  # X.com Developer API setup in progress
+    permissions: [write]
+    restrictions:
+      - manual_only
+      - hermes_only
+      - milo_approval_per_post
+
+  # --- 2Brain Tools ---
+  twobrain_read:
+    type: filesystem
+    description: "Read from 2Brain wiki, outputs, or briefings"
+    implementation: filesystem_read
+    base_path: ~/repos/2Brain/
+    permissions: [read]
+
+  twobrain_write:
+    type: filesystem
+    description: "Write to 2Brain raw/ sources or outputs/"
+    implementation: filesystem_write
+    base_path: ~/repos/2Brain/
+    permissions: [read, write]
+    restrictions:
+      - "Cortana only — other agents route through Cortana"
+      - "Never modify wiki/ directly — add to raw/ for compilation"
+
+  cost_log:
+    type: internal
+    description: "Log API cost to 2Brain/data/brain.sqlite cost_tracker table"
+    implementation: openclaw_function
+    function: cortana.cost_log
+    permissions: [write]
+
+  # --- Mission Control integration ---
+  mc_push:
+    type: script
+    description: "Push tasks, comments, or approvals into Mission Control via REST API"
+    implementation: bash
+    script_path: ~/repos/OpenClawMaster/tools/scripts/mc-push.sh
+    permissions: [write]
+    notes: "Used by cron jobs (security audit, sync-decisions) and the ingest-source skill"
+
+  # --- QA Tools ---
+  read_only_review:
+    type: internal
+    description: Read-only access to all agent outputs for QA evaluation
+    implementation: openclaw_function
+    function: sentinel.review
+    permissions: [read]
+    notes: Sentinel can read any handoff packet or artifact but cannot modify
+
+agents:
+  Milo:
+    tools: [read_state, routing_controls, sessions_spawn]
+  Sagan:
+    tools: [web_read, web_fetch, docs_read, synthesis, twobrain_read]
+  Neo:
+    tools: [code_read, architecture]
+  Cornelius:
+    tools: [plan_shell, plan_filesystem, code_execute]
+  Hermes:
+    tools: [discord_post, telegram_post, email_draft, x_post]
+  Sentinel:
+    tools: [read_only_review]
+  Cortana:
+    tools: [state_log, artifact_registry, twobrain_read, twobrain_write, cost_log, mc_push]

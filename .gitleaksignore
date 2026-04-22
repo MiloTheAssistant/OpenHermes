@@ -1,0 +1,12 @@
+# gitleaks allowlist — false positives only, reviewed and approved
+#
+# Format: FILE_PATH:RULE_ID:LINE_NUMBER
+# See: https://github.com/gitleaks/gitleaks#additional-configuration
+#
+# Review policy: each entry here is a manually reviewed false positive.
+# Never add an entry without confirming the flagged value is not sensitive.
+
+# Mission Control custom field UUIDs — public database identifiers, not secrets.
+# The actual auth token is a SecretRef to ~/.openclaw/secrets.json, never in this file.
+# Triggered because the field name `token_count` contains the word "token" + high-entropy UUID.
+config/mission-control.yaml:generic-api-key:25

@@ -129,7 +129,7 @@ Each phase has an explicit entry state, steps, and exit gate. No phase proceeds 
 ### Phase 1 — Create public OpenHermes repo
 
 **Steps:**
-1. Scaffold directory structure under `/Volumes/BotCentral/Users/milo/repos/OpenHermes/`
+1. Scaffold directory structure under `$OPENHERMES_ROOT/`
 2. Write `.gitignore` (hardened — Codex brief #1)
 3. Write `.pre-commit-config.yaml` + `.secrets.baseline` (Codex brief #2)
 4. Write `LICENSE` (MIT) + initial `README.md` (Codex brief #9)
@@ -190,7 +190,7 @@ Already documented in Section 3 (Keep/Rewrite/Discard Matrix). This phase is the
    - `identity.name: Milo`
    - `providers.primary: minimax-m2.7:cloud` via Ollama API
    - `providers.fallback: NIM minimax-m2.7`
-   - `memory.path: /Volumes/BotCentral/Users/milo/.openclaw/workspace-milo/memory` (or whichever path aligns with Nous Hermes conventions)
+   - `memory.path: ~/.openclaw/workspace-milo/memory` (or whichever path aligns with Nous Hermes conventions)
    - `mcp.server.enabled: true`
    - `approvals.mode: allowlist` + `on_miss: ask`
 5. Provision `OLLAMA_API_KEY` + `NVIDIA_NIM_API_KEY` in `~/.hermes/env` (never in repo)

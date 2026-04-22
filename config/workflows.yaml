@@ -1,0 +1,60 @@
+# Command Center — Workflow Definitions (Phase 5)
+# Milo orchestrates all workflows. Named specialists handle domain steps.
+# Referenced by: GotchaFramework.md, AGENTS.md, docs/Router_Profiles.md
+
+workflows:
+  Daily_Financial_Briefing:
+    type: intelligence
+    schedule: cron
+    cron_expression: "0 7 * * 1-5"     # 7:00 AM CT, weekdays
+    standing_approval_required: true
+    standing_approval_granted: true    # DEC-003
+    instance_clearance_required: Milo
+    channels: [Discord, Telegram]
+    discord_target:
+      server: "Milo's World"
+      channel: "#dfb"
+    path: [Sagan, Hermes, Sentinel, Cortana]
+    sentinel_review: conditional
+    sentinel_triggers:
+      - source_conflict
+      - confidence_below_threshold
+      - unusually_large_market_event
+    failure_action: log_and_notify_milo
+    task_prompt: ~/Documents/agents/tasks/daily_financial_briefing.md
+
+  Market_Signal_Scanner:
+    type: research
+    schedule: interval
+    interval_minutes: 120               # every 2 hours during market hours
+    market_hours_only: true             # 8:30 AM – 4:00 PM CT, weekdays
+    standing_approval_required: false   # internal-only, no publishing
+    channels: []                        # feeds into DFB; no external distribution
+    path: [Sagan, Cortana]
+    sentinel_review: conditional
+    sentinel_triggers:
+      - impact_score_gte_8
+      - conflicting_signals
+    escalation_rule:
+      impact_score_gte_9: notify_milo
+    output_destination: cortana_state   # logged as pending_items for DFB consumption
+    failure_action: log_and_continue    # non-critical, next interval retries
+
+  Security_Audit:
+    type: governance
+    schedule: cron
+    cron_expression: "0 0 * * *"        # midnight daily
+    standing_approval_required: false
+    path: [Sentinel, Cortana]
+    attention_action: push_approval_task_to_mission_control
+    channels: [Telegram]                # summary ping to Milo DM
+    failure_action: log_and_notify_milo
+
+  Memory_Dreaming:
+    type: governance
+    schedule: cron
+    cron_expression: "0 3 * * *"        # 3 AM daily (memory-core plugin owns this)
+    standing_approval_required: false
+    path: [Cortana]
+    managed_by: memory-core-plugin
+    failure_action: log_and_retry_next_cycle

@@ -1,0 +1,83 @@
+# OpenClawMaster → OpenHermes migration manifest
+#
+# Format: SOURCE_REL_PATH  TARGET_REL_PATH
+#   - SOURCE_REL_PATH is relative to $OPENCLAW_MASTER
+#   - TARGET_REL_PATH is relative to $OPENHERMES_ROOT
+#   - Lines starting with # are comments; blank lines ignored
+#
+# Run with:
+#   export OPENCLAW_MASTER=/Volumes/BotCentral/Users/milo/repos/OpenClawMaster
+#   export OPENHERMES_ROOT=/Volumes/BotCentral/Users/milo/repos/OpenHermes
+#   ./move-from-openclawmaster.sh scripts/migration/manifest.txt
+#
+# ================================================================
+# Root governance documents
+# ================================================================
+AGENTS.md                               docs/architecture/AGENTS.md
+GotchaFramework.md                      docs/governance/GotchaFramework.md
+CLAUDE.md                               docs/architecture/CLAUDE.md
+README.md                               docs/architecture/OpenClawMaster-README.md
+
+# ================================================================
+# Agent identity prompts (source-of-truth personas)
+# Milo.md → will become Elon.md in Phase 5 (do NOT rename during migration)
+# ================================================================
+agents/Milo.md                          agents/Elon.md
+agents/Zuck.md                          agents/Zuck.md
+agents/Sagan.md                         agents/specialists/sagan/IDENTITY.md
+agents/Neo.md                           agents/specialists/neo/IDENTITY.md
+agents/Kat.md                           agents/specialists/kat/IDENTITY.md
+agents/Sentinel.md                      agents/specialists/sentinel/IDENTITY.md
+agents/Cortana.md                       agents/specialists/cortana/IDENTITY.md
+agents/Cornelius.md                     agents/specialists/cornelius/IDENTITY.md
+agents/CLAUDE.md                        agents/CLAUDE.md
+
+# ================================================================
+# Configuration (sanitized public references — NOT runtime configs)
+# Runtime secrets live in ~/.openclaw/secrets.json, NEVER in repo
+# ================================================================
+config/models.yaml                      config/models.yaml
+config/routing.yaml                     config/routing.yaml
+config/workflows.yaml                   config/workflows.yaml
+config/channels.yaml                    config/channels.yaml
+config/parallelism.yaml                 config/parallelism.yaml
+config/tools.yaml                       config/tools.yaml
+config/tools_manifest.md                config/tools_manifest.md
+config/workflows_manifest.md            config/workflows_manifest.md
+config/mission-control.yaml             config/mission-control.yaml
+config/CLAUDE.md                        config/CLAUDE.md
+
+# ================================================================
+# Architecture + governance documentation
+# ================================================================
+docs/Agent_Model_Routing_Matrix.md      docs/architecture/Agent_Model_Routing_Matrix.md
+docs/Router_Profiles.md                 docs/architecture/Router_Profiles.md
+docs/Handoff_Protocol.md                docs/architecture/Handoff_Protocol.md
+docs/State_Schema.md                    docs/architecture/State_Schema.md
+docs/Task_Lifecycle.md                  docs/architecture/Task_Lifecycle.md
+docs/QA_Gates.md                        docs/governance/QA_Gates.md
+docs/Execution_Modes.md                 docs/governance/Execution_Modes.md
+docs/Parallel_Execution_Rules.md        docs/governance/Parallel_Execution_Rules.md
+docs/Init_Checklist.md                  docs/runbooks/Init_Checklist.md
+
+# ================================================================
+# State (append-only audit trail; live data gitignored)
+# ================================================================
+state/Decision_Log.md                   state/Decision_Log.md
+state/Active_Projects.md                state/Active_Projects.md
+state/Artifacts_Index.md                state/Artifacts_Index.md
+state/brand-voice.md                    state/brand-voice.md
+state/CLAUDE.md                         state/CLAUDE.md
+
+# ================================================================
+# Scripts (sanitized — remove hardcoded /Volumes/BotCentral/Users/milo paths)
+# ================================================================
+tools/scripts/mc-push.sh                scripts/mc-push.sh
+tools/scripts/gateway-restart.sh        scripts/gateway-restart.sh
+tools/scripts/sync-decisions.sh         scripts/sync-decisions.sh
+
+# ================================================================
+# Workspace bootstrap templates (starter files, not live memory)
+# ================================================================
+# (workspace files are in ~/.openclaw/workspace/, not in the repo —
+#  no manifest entries needed; live workspace stays local)

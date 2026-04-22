@@ -1,0 +1,47 @@
+# Command Center — Parallelism Configuration
+# Runtime constraints for concurrent agent execution.
+# Referenced by: AGENTS.md, GotchaFramework.md, docs/Parallel_Execution_Rules.md
+#
+# Phase 5 (7-agent roster): Milo orchestrates sequentially by default.
+# Parallelism only matters inside Cornelius-exclusive windows and when
+# Milo explicitly fans out to independent specialists.
+
+hardware:
+  platform: Mac Mini M4 Pro
+  total_memory_gb: 64
+  os_reserved_gb: 8
+
+limits:
+  parallel_cap: 4                      # reduced from 6 — fewer agents, tighter coordination
+  max_concurrent_local_model_gb: 45
+
+exclusive_models:
+  - agent: Cornelius
+    model: ollama_local/qwen3-coder-next:latest
+    footprint_gb: 48.2
+    rule: "No concurrent local models when active. Route other work to cloud."
+
+parallel_safe_groups:
+  # Always safe — stateless reads or cloud-only
+  state_and_comms: [Cortana, Hermes]
+
+  # Research + QA can run in parallel with comms (different resources)
+  research_and_gate: [Sagan, Sentinel]
+
+always_parallel_safe:
+  - Cortana      # stateless reads, structured writes
+
+sequential_dependencies:
+  - [Neo, Cornelius]                   # architecture before execution plan
+  - [Sentinel, outbound_publish]       # QA clears before any external post
+  - [Sagan, Hermes]                    # research complete before distribution
+
+timeouts:
+  tolerance: moderate
+  retry_on_transient: true
+  fallback_chain: models.yaml
+
+cancellation:
+  milo_halt: stops_all_downstream
+  sentinel_rejection: blocks_delivery_and_publishing
+  workflow_policy_mismatch: stops_publishing_lanes
