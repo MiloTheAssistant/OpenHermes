@@ -17,8 +17,9 @@ Bootstrapping protocol for Command Center. Run on fresh start, after crash, or w
 ### 1. Verify Infrastructure Services
 
 ```bash
-# Docker Desktop must be running (required for OpenClaw)
-docker info > /dev/null 2>&1 && echo "✅ Docker running" || echo "❌ Docker not running — start Docker Desktop"
+# OrbStack must be running (required for OpenClaw containers)
+docker info > /dev/null 2>&1 && echo "✅ OrbStack running" || echo "❌ OrbStack not running — start OrbStack.app"
+docker context ls 2>/dev/null | grep -q "orbstack \*" && echo "✅ OrbStack is active context" || echo "⚠️  OrbStack is not the active docker context — run: docker context use orbstack"
 
 # Ollama must be serving
 curl -s http://localhost:11434/api/tags > /dev/null 2>&1 && echo "✅ Ollama running" || echo "❌ Ollama not running — run: ollama serve"
@@ -117,13 +118,13 @@ fi
 | Result | Action |
 |---|---|
 | All ✅ | System ready — Milo may accept tasks |
-| Any ❌ in infrastructure (Docker, Ollama, OpenClaw) | Resolve before accepting tasks — agents cannot function without serving infrastructure |
+| Any ❌ in infrastructure (OrbStack, Ollama, OpenClaw) | Resolve before accepting tasks — agents cannot function without serving infrastructure |
 | Any ❌ in environment variables | Add missing keys to `~/.zshrc` and `source ~/.zshrc` |
 | Any ❌ in local models | Pull missing models: `ollama pull <model>` |
 | Any ❌ in state/config files | Restore from backup or recreate from templates |
 
 ## Recovery Priority Order
-1. Docker Desktop → start it
+1. OrbStack → start `OrbStack.app`
 2. Ollama → `ollama serve`
 3. External volume → mount `$EXTERNAL_VOLUME`
 4. Environment variables → add to `~/.zshrc`

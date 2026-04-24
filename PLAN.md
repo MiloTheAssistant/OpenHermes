@@ -291,7 +291,7 @@ Already documented in Section 3 (Keep/Rewrite/Discard Matrix). This phase is the
 2. Codex brief #6: `.env.example` + `deploy/env/milo.env.example` + `deploy/env/elon.env.example`
 3. Dockerfile for OpenClaw (or use external process; decide based on current runtime fit)
 4. Dockerfile for Nous Hermes (derived from hermes-agent repo)
-5. Docker networks: `openhermes_internal` (Milo ↔ Elon), `openhermes_edge` (public → proxy)
+5. OrbStack networks: `openhermes_internal` (Milo ↔ Elon), `openhermes_edge` (public → proxy)
 6. Loopback-only port bindings for gateway (18789) and Milo MCP (8787)
 7. Caddy reverse proxy with token-header auth
 8. `orbstack` up, verify all health endpoints, confirm network posture
@@ -390,7 +390,7 @@ Also produce the Caddyfile: authenticated reverse proxy that requires a bearer t
 
 ### Brief #5 — `scripts/observability/log-collector.sh`
 ```
-Produce a bash script that tails the Docker logs of 3 OrbStack containers (milo, elon, reverse_proxy) in parallel, prefixes each line with the container name + ISO timestamp, JSON-merges structured log lines (detect by leading `{`), and writes to stdout. Support optional SIEM forwarding via SIEM_ENDPOINT env var (curl POST NDJSON, retry on failure with backoff). Handle container restarts (re-attach on reconnect). Exit cleanly on SIGTERM.
+Produce a bash script that tails the logs of 3 OrbStack containers (milo, elon, reverse_proxy) in parallel, prefixes each line with the container name + ISO timestamp, JSON-merges structured log lines (detect by leading `{`), and writes to stdout. Support optional SIEM forwarding via SIEM_ENDPOINT env var (curl POST NDJSON, retry on failure with backoff). Handle container restarts (re-attach on reconnect). Exit cleanly on SIGTERM.
 
 Keep pure bash + jq. No node/python. Include usage comment at top.
 ```
@@ -514,7 +514,7 @@ Full cutover including all channel migrations: ~3 weeks. Core dispatch + single 
 At any phase, if something breaks:
 
 - **Before Phase 11 (no deployment):** OpenClawMaster runtime continues to serve. Roll back OpenHermes tree to last good commit. Re-evaluate.
-- **During Phase 11 (deployment cutover):** Docker services can be stopped; OpenClaw on host continues serving; remove `.hermes/` directory, revert `openclaw.json` to backup, restart gateway. Return to Phase 5.1 state.
+- **During Phase 11 (deployment cutover):** OrbStack services can be stopped; OpenClaw on host continues serving; remove `.hermes/` directory, revert `openclaw.json` to backup, restart gateway. Return to Phase 5.1 state.
 - **After OpenHermes is live:** Maintain OpenClawMaster runtime for 72h after full cutover as emergency fallback. Then delete.
 
 The OpenClawMaster repo is the pre-migration snapshot — cloning it at any time recovers the previous state.

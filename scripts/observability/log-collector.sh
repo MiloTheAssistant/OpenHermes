@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unified Docker log collector for OpenHermes containers.
+# Unified OrbStack log collector for OpenHermes containers.
 # TEMPLATE USAGE: tails milo, elon, and openhermes_proxy and writes a merged stream to stdout.
 # Run examples: ./scripts/observability/log-collector.sh or SIEM_ENDPOINT=https://siem.example/ingest ./scripts/observability/log-collector.sh
 # Exit codes: 0 on clean shutdown, 1 on dependency or docker inspection failure at startup.

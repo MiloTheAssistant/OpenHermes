@@ -301,7 +301,7 @@ Long agent chains accumulate tokens fast.
 On fresh start, after crash, or when environment integrity is uncertain, run `docs/Init_Checklist.md` before accepting tasks.
 
 The checklist verifies:
-1. **Infrastructure services** — Docker, Ollama, OpenClaw running
+1. **Infrastructure services** — OrbStack, Ollama, OpenClaw running
 2. **External volume** — `$OPENCLAW_HOME` mounted
 3. **Environment variables** — all required API keys set
 4. **Local models** — key Ollama models pulled
