@@ -31,11 +31,11 @@ Two-layer boundary is hard:
 | Agent | Role | Model | Runtime |
 |---|---|---|---|
 | **Milo** | Front door (NEW — Nous Hermes Agent) | `minimax-m2.7:cloud` primary, NIM fallback | `nousresearch/hermes-agent` Python (uv) |
-| **Elon** | Orchestrator (formerly OpenClaw Milo) | `openai/gpt-5.4` via OAuth proxy, `gpt-5.4-mini` tier-2, `zai/glm-5.1` tier-3 | OpenClaw agent `id: elon` |
+| **Elon** | Orchestrator (formerly OpenClaw Milo) | `openai/gpt-5.5` via OAuth proxy, `gpt-5.5-mini` tier-2, `zai/glm-5.1` tier-3 | OpenClaw agent `id: elon` |
 | **Zuck** | Social publisher (formerly OpenClaw Hermes) | `ollama/glm-5.1:cloud`, `zai/glm-5.1-turbo` fallback | OpenClaw agent `id: zuck` (renamed from `hermes`) |
-| Sagan | Deep research | `perplexity/sonar-reasoning-pro`, `gpt-5.4` long-doc escalation | OpenClaw specialist |
-| Neo | Lead engineer | `nim/qwen3-coder-480b`, `gpt-5.4` escalation, local `qwen3.6:35b` fallback | OpenClaw specialist |
-| Kat | Content writing | `openai/gpt-5.4`, `ollama/gemma4:31b-cloud` fallback | OpenClaw specialist |
+| Sagan | Deep research | `perplexity/sonar-reasoning-pro`, `gpt-5.5` long-doc escalation | OpenClaw specialist |
+| Neo | Lead engineer | `nim/qwen3-coder-480b`, `gpt-5.5` escalation, local `qwen3.6:35b` fallback | OpenClaw specialist |
+| Kat | Content writing | `openai/gpt-5.5`, `ollama/gemma4:31b-cloud` fallback | OpenClaw specialist |
 | Sentinel | QA gate | `openai/o4-mini`, `zai/glm-5.1-turbo` fallback | OpenClaw specialist |
 | Cortana | State/memory/telemetry | `ollama/qwen3.5:4b` (local), `glm-5.1:cloud` fallback | OpenClaw specialist (persistent session) |
 | Cornelius | Infra/heavy coding | `ollama/qwen3-coder-next:latest` (local 51GB exclusive) | OpenClaw specialist |
@@ -48,7 +48,7 @@ Two-layer boundary is hard:
 
 - **Ollama Pro cloud (3 concurrent slots):** Slot 1 Milo (minimax-m2.7:cloud), Slot 2 Zuck (glm-5.1:cloud), Slot 3 Kat fallback (gemma4:31b-cloud)
 - **NIM:** Neo primary (qwen3-coder-480b), Sagan escalation (nemotron-ultra-253b)
-- **Codex (OAuth proxy on 127.0.0.1:10531):** Elon primary (gpt-5.4), Sentinel primary (o4-mini), Kat primary (gpt-5.4), Milo/Sagan/Neo escalation
+- **Codex (OAuth proxy on 127.0.0.1:10531):** Elon primary (gpt-5.5), Sentinel primary (o4-mini), Kat primary (gpt-5.5), Milo/Sagan/Neo escalation
 - **Z.ai GLM Coding Plan Pro:** Elon tier-3 (glm-5.1), Sentinel/Hermes fallback (glm-5.1-turbo)
 - **Perplexity:** Sagan primary (sonar-reasoning-pro)
 - **Local (Mac Mini M4 Pro, 64GB, 45GB budget):** Cornelius exclusive (51GB), Cortana (3.4GB), Neo local fallback (23GB)
@@ -68,7 +68,7 @@ The Milo↔Elon boundary uses the bridge: Milo exposes MCP tools to Elon; Elon i
 - Cron-based specialist dispatch pattern (DEC-006 fix — proven via canaries 1+2)
 - Anti-confabulation discipline: session-key verification; never narrate a dispatch you didn't make
 - Per-specialist tool allowlists (Sagan: web + memory read; Cortana: state only; Sentinel: read-only; Neo/Cornelius: engineering toolkit; Kat: content tools)
-- Model matrix (Sentinel=o4-mini, Kat=gpt-5.4, Sagan=sonar-reasoning-pro, Neo=NIM 480b, Cornelius=local 48GB exclusive)
+- Model matrix (Sentinel=o4-mini, Kat=gpt-5.5, Sagan=sonar-reasoning-pro, Neo=NIM 480b, Cornelius=local 48GB exclusive)
 - Cornelius local-exclusive constraint (enforce in Elon's dispatch layer)
 - Provider fallback chains (registered and cleaned in Phase 5.1)
 - Per-agent SQLite memory stores (9 stores: main/milo/elon/zuck/sagan/neo/kat/sentinel/cortana/cornelius)
@@ -80,11 +80,11 @@ The Milo↔Elon boundary uses the bridge: Milo exposes MCP tools to Elon; Elon i
 
 | From | To | Notes |
 |---|---|---|
-| `agents/Milo.md` (OpenClaw Milo, orchestrator) | `agents/Elon.md` | Renames Milo → Elon. Phase 5.1 dispatch discipline preserved. Model changes to `openai/gpt-5.4` via OAuth (tier-2: gpt-5.4-mini, tier-3: glm-5.1 via Z.ai). |
+| `agents/Milo.md` (OpenClaw Milo, orchestrator) | `agents/Elon.md` | Renames Milo → Elon. Phase 5.1 dispatch discipline preserved. Model changes to `openai/gpt-5.5` via OAuth (tier-2: gpt-5.5-mini, tier-3: glm-5.1 via Z.ai). |
 | `workspace/SOUL.md` (current Milo soul) | Split: `workspace-elon/SOUL.md` (inherits orchestrator discipline) + new `workspace/SOUL.md` for Nous Hermes Milo | Orchestration/HALT/complexity-scoring content goes to Elon; front-door intake content goes to new Milo. |
 | `agents/Zuck.md` (currently has old Hermes persona) | `agents/Zuck.md` full rewrite | Mark Zuckerberg archetype. Social publisher only. No email triage (Milo handles inbox). |
 | `AGENTS.md` | New Phase 6.0 roster + Milo/Elon split documentation | |
-| `docs/Agent_Model_Routing_Matrix.md` | Updated matrix with Elon primary = gpt-5.4 + Milo Nous Hermes row | |
+| `docs/Agent_Model_Routing_Matrix.md` | Updated matrix with Elon primary = gpt-5.5 + Milo Nous Hermes row | |
 
 ### 🗑️ DISCARD (clean slate on new Milo)
 
@@ -209,15 +209,15 @@ Already documented in Section 3 (Keep/Rewrite/Discard Matrix). This phase is the
 6. Install `openai-oauth` proxy: `npm install -g openai-oauth`; first run triggers ChatGPT OAuth in browser
 7. Write `deploy/launchd/com.openhermes.openai-oauth.plist` (Codex brief #7) to supervise proxy on boot
 8. Additive edit to `~/.openclaw/openclaw.json`:
-   - Add `models.custom_models` entries for gpt-5.4 (OAuth), gpt-5.4-mini (OAuth), glm-5.1 (Z.ai)
-   - Update `agents.list` for `id: elon`: set `model: gpt-5.4`, `fallback_models: [gpt-5.4-mini, glm-5.1]`
+   - Add `models.custom_models` entries for gpt-5.5 (OAuth), gpt-5.5-mini (OAuth), glm-5.1 (Z.ai)
+   - Update `agents.list` for `id: elon`: set `model: gpt-5.5`, `fallback_models: [gpt-5.5-mini, glm-5.1]`
    - Rename `id: hermes` → `id: zuck` (holds for Phase 7)
 9. Backup first: `cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak-$(date +%Y%m%d-%H%M%S)`
 10. Add `ZAI_CODING_PLAN_KEY` to `~/.openclaw/secrets.json` (chmod 600)
 11. Restart gateway: `bash scripts/gateway-restart.sh`
-12. Canary: cron-dispatch to Elon asking for a dry-run plan; verify session on gpt-5.4 and return path works
+12. Canary: cron-dispatch to Elon asking for a dry-run plan; verify session on gpt-5.5 and return path works
 
-**Gate 5:** Elon boots on gpt-5.4 via OAuth, tier-2 and tier-3 fallbacks tested by simulated primary failure, no disruption to specialists.
+**Gate 5:** Elon boots on gpt-5.5 via OAuth, tier-2 and tier-3 fallbacks tested by simulated primary failure, no disruption to specialists.
 
 ### Phase 6 — Manual Milo persona migration
 
@@ -474,12 +474,78 @@ Keep it pure bash + git. Include usage example as comment. Safe to re-run (idemp
 
 ---
 
+## 7a. Runtime Update Addendum (OpenClaw 2026.4.22 + GPT-5.5)
+
+**Runtime versions pinned for OpenHermes launch:**
+
+| Component | Version | Notes |
+|---|---|---|
+| OpenClaw CLI | **2026.4.22** | Updated 2026-04-24. Extension-deps bug fixed. Gateway restarted clean. |
+| OpenClaw Companion App | 2026.4.20 → **2026.4.22** (pending user update) | Update via Sparkle: open OpenClaw.app → menu → "Check for Updates…" |
+| Ollama | 0.21.0 → **0.21.2** (pending user install) | Downloaded to `/tmp/Ollama-latest.zip`. User installs via: quit Ollama, unzip, replace `/Applications/Ollama.app`, relaunch. |
+| GPT-5 model series | **gpt-5.5** (just released) | Replaces gpt-5.4 everywhere in the matrix. Confirmed available when OAuth proxy installed in Phase 5. |
+
+### New OpenClaw features that simplify OpenHermes work
+
+**1. GPT-5 prompt overlay is now built into the shared provider runtime.**
+Previously we planned to hand-write verification-before-final, weak-result recovery, and completion-bias rules into Elon's SOUL.md. As of 2026.4.20, those disciplines are automatically applied to any GPT-5.x model (via OpenAI/Codex/OpenRouter providers). Configuration knob: `agents.defaults.promptOverlays.gpt5.personality`.
+
+**Impact on Phase 5:** Elon's SOUL.md still needs our specific dispatch discipline (cron pattern, session-key verification, parallelism rules, Cornelius exclusivity) — but the generic "don't hallucinate success / verify before final" rules are now inherited from the overlay. We can simplify Elon's prompt.
+
+**2. `/models add <provider> <modelId>` runtime command.**
+Registers a new model from chat without a gateway restart. For GPT-5.5 addition: `/models add openai gpt-5.5`. No `openclaw.json` edit needed for that specific addition (though we still edit for the full custom-models block).
+
+**3. Cron: `jobs.json` separated from `jobs-state.json`.**
+`jobs.json` is now a stable, git-trackable definition file. We can commit our cron dispatch patterns to OpenHermes without runtime state noise. Good for audit trail.
+
+**4. Auto-install bundled plugin runtime dependencies.**
+Previously broke our 2026.4.21 attempt (missing `@larksuiteoapi/node-sdk`, `nostr-tools`). 2026.4.22 installs each plugin's runtime deps into its own directory on startup. No manual intervention needed.
+
+**5. `sessions_list` mailbox-style filters** (label, agent, search) with derived title + last-message previews. Phase 12 observability gets cleaner surface.
+
+**6. OpenAI Responses native `web_search` tool.**
+Direct OpenAI Responses models get a native web_search tool when enabled. Affects Sagan's long-doc lane on gpt-5.5 — no need to thread Perplexity for every query.
+
+**7. WhatsApp is now a first-class channel.**
+Per-group `systemPrompt`, `replyToMode` native reply quoting. **Add WhatsApp to Phase 12 channel migration list** (between Discord and Slack, or wherever fits your rollout).
+
+**8. New providers available (not required):**
+- **xAI** — image gen (`grok-imagine-image`), TTS, STT, realtime Voice Call transcription
+- **Tencent Cloud** — Hy3 models
+- **Amazon Bedrock Mantle** — Claude Opus 4.7 via Anthropic Messages route (note: still blocked by our Anthropic-API policy)
+- **Deepgram / ElevenLabs / Mistral** streaming STT
+
+Parked for post-launch evaluation.
+
+### Gotcha
+
+**OpenClaw removed the Codex CLI OAuth auth-import path.** 2026.4.22 no longer copies `~/.codex` OAuth material into agent auth stores. OpenClaw's recommended Codex path is now **browser login or device pairing**.
+
+Our Phase 5 plan uses the separate `openai-oauth` npm proxy (a different mechanism — runs its own localhost endpoint on 127.0.0.1:10531 backed by a fresh ChatGPT browser login). **This path still works** and is unaffected by the OpenClaw change. No plan revision needed — just worth noting that the native OpenClaw Codex integration is now a cleaner alternative we could evaluate post-launch.
+
+### Revised Elon prompt scope
+
+With the GPT-5 overlay built-in, Elon's `agents/Elon.md` / `workspace-elon/SOUL.md` needs to cover:
+
+| Area | Who owns it | Notes |
+|---|---|---|
+| Verification-before-final, completion bias, weak-result recovery | **OpenClaw built-in overlay** | No action needed |
+| Cron-based specialist dispatch + session-key verification | **Our Elon SOUL** | DEC-006 discipline — carry forward |
+| Parallel dispatch pattern with PARALLEL_CAP=4 | **Our Elon SOUL** | OpenClaw-specific routing constraint |
+| Cornelius local-exclusive constraint | **Our Elon SOUL** | Hardware-specific |
+| HALT authority, complexity scoring | **Our Elon SOUL** | Orchestrator-specific |
+| Escalation triggers between tiers | **Our Elon SOUL** | 3-tier fallback GPT-5.5 → GPT-5.5-mini → GLM-5.1 |
+
+Net: **Elon's SOUL is ~40% shorter than originally scoped.** The generic anti-hallucination discipline is now upstream.
+
+---
+
 ## 8. Open Decisions
 
 Nearly all settled. Remaining items parked for post-launch:
 
 1. **Shopify migration** — paused until OpenHermes is live
-2. **Perplexity Sagan payload bug** — deferred (workaround: use gpt-5.4 long-doc lane for research)
+2. **Perplexity Sagan payload bug** — deferred (workaround: use gpt-5.5 long-doc lane for research)
 3. **OpenClaw 2026.4.21 extension-deps upstream bug** — track but don't block
 4. **Nous Hermes latest version** — pin at install time, document in `docs/runbooks/NOUS_HERMES_VERSION.md`
 5. **Production secrets backend** (1Password / Doppler / AWS SM / Infisical vs `~/.openclaw/secrets.json`) — decide in Phase 11; personal deployment can use local secrets.json
@@ -549,7 +615,7 @@ Record each gate's approval here as they're passed.
 | 2 | Migration content moved + sanitized | Pending | — |
 | 3 | Keep/Rewrite/Discard matrix honored | Pending | — |
 | 4 | Nous Hermes Milo smoke-test pass | Pending | — |
-| 5 | Elon on gpt-5.4 + 3-tier fallback | Pending | — |
+| 5 | Elon on gpt-5.5 + 3-tier fallback | Pending | — |
 | 6 | New Milo persona + USER migrated | Pending | — |
 | 7 | Zuck rewrite + publish_packet envelope | Pending | — |
 | 8 | Bridge roundtrip canary | Pending | — |
