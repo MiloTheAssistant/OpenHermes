@@ -474,16 +474,16 @@ Keep it pure bash + git. Include usage example as comment. Safe to re-run (idemp
 
 ---
 
-## 7a. Runtime Update Addendum (OpenClaw 2026.4.22 + GPT-5.5)
+## 7a. Runtime Update Addendum (OpenClaw 2026.4.23 + GPT-5.5)
 
 **Runtime versions pinned for OpenHermes launch:**
 
 | Component | Version | Notes |
 |---|---|---|
-| OpenClaw CLI | **2026.4.22** | Updated 2026-04-24. Extension-deps bug fixed. Gateway restarted clean. |
-| OpenClaw Companion App | 2026.4.20 → **2026.4.22** (pending user update) | Update via Sparkle: open OpenClaw.app → menu → "Check for Updates…" |
+| OpenClaw CLI | **2026.4.23** (via `2026.4.23-beta.6` until npm publishes GA) | Updated 2026-04-24. GitHub tag GA; npm GA publish pending. beta.6 is near-identical code and running clean. A monitor auto-upgrades to GA on publish. |
+| OpenClaw Companion App | 2026.4.20 → **2026.4.22** (pending user update) | Update via Sparkle: open OpenClaw.app → menu → "Check for Updates…". 4.23 app build will follow. |
 | Ollama | 0.21.0 → **0.21.2** (pending user install) | Downloaded to `/tmp/Ollama-latest.zip`. User installs via: quit Ollama, unzip, replace `/Applications/Ollama.app`, relaunch. |
-| GPT-5 model series | **gpt-5.5** (just released) | Replaces gpt-5.4 everywhere in the matrix. Confirmed available when OAuth proxy installed in Phase 5. |
+| GPT-5 model series | **gpt-5.5** | Replaces gpt-5.4 everywhere in the matrix. 2026.4.23 ships Pi 0.70.0 with upstream gpt-5.5 catalog metadata + an OAuth catalog-row synthesis fallback (`openai-codex/gpt-5.5`) so cron and subagent runs don't fail with `Unknown model`. |
 
 ### New OpenClaw features that simplify OpenHermes work
 
@@ -517,11 +517,30 @@ Per-group `systemPrompt`, `replyToMode` native reply quoting. **Add WhatsApp to 
 
 Parked for post-launch evaluation.
 
+### Additional 2026.4.23 improvements
+
+**9. `sessions_spawn` gains optional forked context.**
+Child sessions can inherit the requester transcript when needed, with isolated sessions remaining the default. **May improve our Phase 8 bridge design** — Milo→Elon delegation via native `sessions_spawn` can pass richer context if we opt in, rather than having to bundle everything into a handoff-envelope payload. Keep the envelope for the governance_class classifier, but the transcript carryover is a backup channel for context-heavy tasks.
+
+**10. Memory dreaming decoupled from heartbeat (fixes DEC-005-era bug).**
+The nightly dream cycle now runs as an isolated lightweight agent turn instead of going through the main-session heartbeat. This fixes the bug where empty `HEARTBEAT.md` silently blocked dreaming. `openclaw doctor --fix` migrates stale dreaming cron jobs into the new shape automatically. **No action needed from us** — our earlier HEARTBEAT.md workaround is now redundant.
+
+**11. ACPX/Codex drops `auth.json` bridge materialization.**
+Codex ACP, Codex app-server, and Codex CLI runs now use their normal `CODEX_HOME`/`~/.codex` auth path directly. Cleaner auth topology. Not affecting our `openai-oauth` proxy plan, but if we ever shift to native OpenClaw Codex integration, the auth handoff is simpler.
+
+**12. MCP tools bridge no longer lists owner-only tools like `cron`.**
+Closes a privilege-escalation path. Good for our Phase 10 governance posture — non-owner MCP callers can't even see the cron tool now, never mind invoke it.
+
+**13. Security hardening across channels.**
+Teams, WhatsApp, Discord, Android, QQ, Group-chat: prompt-injection defense tightened (channel-sourced names/labels rendered through fenced untrusted metadata JSON). Cleartext gateway pairing restricted to loopback/private-IP. Approvals require explicit enablement (no auto-fallback). Gateway config.apply/patch uses allowlist instead of denylist. **No action required** — upstream fixes.
+
+**14. Image generation via Codex OAuth** (`openai/gpt-image-2` + `openai/gpt-image-2` reference-image edits) work **without** an `OPENAI_API_KEY`. **Affects Kat** — if she needs to generate imagery for blog posts / social content, the OAuth proxy path works natively. No separate OpenAI API key provisioning.
+
 ### Gotcha
 
 **OpenClaw removed the Codex CLI OAuth auth-import path.** 2026.4.22 no longer copies `~/.codex` OAuth material into agent auth stores. OpenClaw's recommended Codex path is now **browser login or device pairing**.
 
-Our Phase 5 plan uses the separate `openai-oauth` npm proxy (a different mechanism — runs its own localhost endpoint on 127.0.0.1:10531 backed by a fresh ChatGPT browser login). **This path still works** and is unaffected by the OpenClaw change. No plan revision needed — just worth noting that the native OpenClaw Codex integration is now a cleaner alternative we could evaluate post-launch.
+Our Phase 5 plan uses the separate `openai-oauth` npm proxy (a different mechanism — runs its own localhost endpoint on 127.0.0.1:10531 backed by a fresh ChatGPT browser login). **This path still works** and is unaffected by the OpenClaw change. Worth noting that the native OpenClaw Codex integration is now a cleaner alternative we could evaluate post-launch — 2026.4.23 simplifies it further by using `CODEX_HOME`/`~/.codex` directly without `auth.json` bridge files.
 
 ### Revised Elon prompt scope
 
