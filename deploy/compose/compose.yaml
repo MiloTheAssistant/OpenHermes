@@ -1,0 +1,90 @@
+# OpenHermes — Compose Spec deployment artifact
+# -----------------------------------------------
+# OCI Compose Spec: https://compose-spec.io
+# Runtime we use: OrbStack on macOS (`docker` CLI is drop-in compatible).
+# Any Compose-compatible runtime (Docker Engine, Podman, Rancher Desktop,
+# Colima) can consume this file.
+#
+# STATUS: Reference / reserved for future multi-host or shared-user
+# deployments. Not currently used for single Mac Mini deployment.
+#
+# ──────────────────────────────────────────────────────────────────────────
+# Why nothing is defined here today
+# ──────────────────────────────────────────────────────────────────────────
+#
+# OpenHermes runs across three processes on a single Mac Mini. Of those:
+#
+#   1. Mission Control — postgres + redis + FastAPI backend +
+#      Next.js frontend + webhook worker.
+#      Already in OrbStack via its own compose stack at
+#      ~/repos/openclaw-mission-control/compose.yml.
+#
+#   2. OpenClaw gateway (Elon) — runs natively on the host as a macOS
+#      LaunchAgent. Deep native integration with Ollama at
+#      127.0.0.1:11434, Codex OAuth via ~/.codex/, per-agent SQLite
+#      memory stores. Containerizing is net-loss for this setup.
+#
+#   3. Nous Hermes (Milo) — single-user CLI / interactive tool,
+#      invoked via `uv run hermes` or ad-hoc. No public port, no daemon
+#      role. Running on host is the native deployment shape.
+#
+# No component's governance (memory contract, classifier, MC policies,
+# per-agent attribution) benefits from network isolation via Compose
+# networks. Governance is enforced at the tool-allowlist and config
+# layers (Phase 9 + 10).
+#
+# ──────────────────────────────────────────────────────────────────────────
+# When this file becomes active
+# ──────────────────────────────────────────────────────────────────────────
+#
+# - Multi-host deployment (splitting Milo/Elon across machines)
+# - Shared-user scenario requiring strict network boundaries
+# - Public exposure beyond the LAN (add reverse_proxy with Caddy)
+# - Test/staging copy running alongside prod on the same host
+#
+# Until then, services are intentionally empty. Phase 11 verifies the
+# host-native topology; this file captures the contingency shape.
+#
+# ──────────────────────────────────────────────────────────────────────────
+# Reserved service shapes (populate when activating)
+# ──────────────────────────────────────────────────────────────────────────
+# services:
+#   milo:
+#     build:
+#       context: ../../../hermes-agent
+#     image: openhermes/milo:${OPENHERMES_VERSION:-dev}
+#     restart: unless-stopped
+#     networks: [openhermes_internal, openhermes_edge]
+#     ports: ["127.0.0.1:8787:8787"]
+#     volumes:
+#       - ${HOME}/.hermes:/opt/data:rw
+#       - ../../workspace:/workspace:rw
+#     environment:
+#       HERMES_UID: 10000
+#       OPENCLAW_GATEWAY_URL: http://host.docker.internal:18789
+#       MISSION_CONTROL_API:  http://host.docker.internal:8000
+#     extra_hosts: ["host.docker.internal:host-gateway"]
+#
+#   reverse_proxy:
+#     image: caddy:2
+#     restart: unless-stopped
+#     networks: [openhermes_edge]
+#     ports: ["443:443", "80:80"]
+#     volumes:
+#       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+#       - caddy_data:/data
+#       - caddy_config:/config
+#     environment:
+#       OPENHERMES_DOMAIN:     ${OPENHERMES_DOMAIN:-openhermes.localhost}
+#       OPENHERMES_EDGE_TOKEN: ${OPENHERMES_EDGE_TOKEN}
+#
+# networks:
+#   openhermes_internal: { driver: bridge, internal: true }
+#   openhermes_edge:     { driver: bridge }
+#
+# volumes:
+#   caddy_data:
+#   caddy_config:
+
+# Minimal valid Compose file — intentionally empty services block.
+services: {}

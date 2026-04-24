@@ -299,19 +299,29 @@ Promotion to committed role is a simple `openclaw.json` edit + matrix doc update
 
 **Gate 10:** MC approvals flow tested end-to-end for Zuck publish, per-agent credentials verified in audit log.
 
-### Phase 11 — OrbStack deployment
+### Phase 11 — Verify deployed topology (host-native + OrbStack-MC)
+
+**Course correction from the original plan.** After Phases 0–10 landed, containerizing Milo and Elon didn't actually buy us anything on a single-Mac-Mini personal deployment. The governance layer (memory contract, classifier, MC policies, per-agent attribution) is enforced at the tool/config layer, not the network layer, so Compose-network isolation is a non-value. See `docs/architecture/PHASE_11_DEPLOYMENT.md` for the full reasoning.
+
+**Final deployed topology:**
+
+| Component | Runtime | Why |
+|---|---|---|
+| **Mission Control** (postgres + redis + FastAPI + Next.js + webhook worker) | OrbStack containers (5-container stack at `~/repos/openclaw-mission-control/compose.yml`) | Multi-service web app — naturally container-shaped. Already live. |
+| **OpenClaw gateway (Elon)** | Host, via macOS LaunchAgent on `127.0.0.1:18789` | Deep native integration: LaunchAgent, local Ollama at `:11434`, Codex OAuth via `~/.codex/`, per-agent SQLite memory, native notifications. Containerizing = net loss. |
+| **Nous Hermes (Milo)** | Host, `uv run hermes chat` or ad-hoc | Single-user CLI tool. No daemon role, no public port. Host is the native shape. |
+| **Caddy reverse proxy** | Not deployed | No public exposure — LAN-only personal assistant. Revisit if Tailscale/public exposure is added. |
 
 **Steps:**
-1. Codex brief #4: `deploy/docker/docker-compose.yml` + Caddyfile (OrbStack-compatible)
-2. Codex brief #6: `.env.example` + `deploy/env/milo.env.example` + `deploy/env/elon.env.example`
-3. Dockerfile for OpenClaw (or use external process; decide based on current runtime fit)
-4. Dockerfile for Nous Hermes (derived from hermes-agent repo)
-5. OrbStack networks: `openhermes_internal` (Milo ↔ Elon), `openhermes_edge` (public → proxy)
-6. Loopback-only port bindings for gateway (18789) and Milo MCP (8787)
-7. Caddy reverse proxy with token-header auth
-8. `orbstack` up, verify all health endpoints, confirm network posture
+1. Verify MC stack is running in OrbStack (`docker compose -f ~/repos/openclaw-mission-control/compose.yml ps`)
+2. Verify OpenClaw gateway is running on host (`openclaw gateway call health`)
+3. Verify Nous Hermes Milo smoke test (`uv run hermes chat -q "MILO_OK test"`)
+4. Run end-to-end bridge canary: Milo → classifier → Elon → return. Re-verify `BRIDGE_OK` still passes post-Zuck-rename and post-plan-corrections.
+5. Document the topology in `docs/architecture/PHASE_11_DEPLOYMENT.md` with the reasoning for host-native vs. containerized per component.
 
-**Gate 11:** Services run under OrbStack, external access gated through Caddy only.
+**Gate 11:** All three runtimes operational on their target surfaces, end-to-end bridge canary passes.
+
+**`deploy/compose/compose.yaml`** is kept in the repo as a reference template for future multi-host or shared-user deployments (populate the reserved service shapes when those scenarios apply). Empty `services: {}` block today — the file is intentionally not wired up to any container.
 
 ### Phase 12 — Observability + phased channel migration
 
@@ -390,7 +400,7 @@ Optional audit object: {created_at (ISO datetime), created_by (string), trace_id
 additionalProperties: false. Include descriptive error messages on each field. Also produce a companion Python validator using `jsonschema` library that loads the schema, validates an envelope, and returns (is_valid, errors_list).
 ```
 
-### Brief #4 — `docker-compose.yml` for OrbStack + Caddyfile
+### Brief #4 — `compose.yaml` for OrbStack + Caddyfile
 ```
 Produce a docker-compose.yml for OrbStack (macOS) with 3 services:
 1. milo (build context: ../../../hermes-agent) — on networks openhermes_internal + openhermes_edge; volume mount workspace → /workspace rw; env file deploy/env/milo.env ro; expose 127.0.0.1:8787 loopback only
