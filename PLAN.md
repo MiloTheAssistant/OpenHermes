@@ -508,6 +508,18 @@ Previously we planned to hand-write verification-before-final, weak-result recov
 **2. `/models add <provider> <modelId>` runtime command.**
 Registers a new model from chat without a gateway restart. For GPT-5.5 addition: `/models add openai gpt-5.5`. No `openclaw.json` edit needed for that specific addition (though we still edit for the full custom-models block).
 
+**2a. `/model` session switch — sibling command.**
+- `/model` — show the current session's model
+- `/model <provider>/<modelId>` — switch this session's model on the fly (session-scoped override; doesn't change agent config)
+
+**Practical uses during OpenHermes build:**
+- **Phase 5 Kimi/DeepSeek benchmarks:** send prompt A → `/model ollama/kimi-k2.6:cloud` → send prompt A again → compare. No cron boilerplate, no config churn.
+- **Tier-2/tier-3 fallback validation:** force Elon to run on `/model zai/glm-5.1` for one turn to confirm the tier-3 path produces reasonable output.
+- **Mid-session escalation:** a task unexpectedly needs 1M context → `/model openai/gpt-5.5` for that turn only, then revert.
+- **A/B testing during matrix decisions:** run the same prompt through minimax-m2.7 vs. gpt-5.5 in two separate sessions to compare head-to-head without editing agent config.
+
+Session-scoped overrides are cleared on `/new` or `/reset` (2026.4.20 fix); explicit user selections are preserved until then.
+
 **3. Cron: `jobs.json` separated from `jobs-state.json`.**
 `jobs.json` is now a stable, git-trackable definition file. We can commit our cron dispatch patterns to OpenHermes without runtime state noise. Good for audit trail.
 
