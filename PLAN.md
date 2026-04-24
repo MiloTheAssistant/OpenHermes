@@ -31,7 +31,7 @@ Two-layer boundary is hard:
 | Agent | Role | Model | Runtime |
 |---|---|---|---|
 | **Milo** | Front door (NEW — Nous Hermes Agent) | `minimax-m2.7:cloud` primary, NIM fallback | `nousresearch/hermes-agent` Python (uv) |
-| **Elon** | Orchestrator (formerly OpenClaw Milo) | `openai/gpt-5.5` via OAuth proxy, `gpt-5.5-mini` tier-2, `zai/glm-5.1` tier-3 | OpenClaw agent `id: elon` |
+| **Elon** | Orchestrator (formerly OpenClaw Milo) | `openai-codex/gpt-5.5` via Codex OAuth (native in 2026.4.23), `ollama/kimi-k2.6:cloud` tier-2, `zai/glm-5.1` tier-3 | OpenClaw agent `id: elon` |
 | **Zuck** | Social publisher (formerly OpenClaw Hermes) | `ollama/glm-5.1:cloud`, `zai/glm-5.1-turbo` fallback | OpenClaw agent `id: zuck` (renamed from `hermes`) |
 | Sagan | Deep research | `perplexity/sonar-reasoning-pro`, `gpt-5.5` long-doc escalation | OpenClaw specialist |
 | Neo | Lead engineer | `nim/qwen3-coder-480b`, `gpt-5.5` escalation, local `qwen3.6:35b` fallback | OpenClaw specialist |
@@ -80,7 +80,7 @@ The Milo↔Elon boundary uses the bridge: Milo exposes MCP tools to Elon; Elon i
 
 | From | To | Notes |
 |---|---|---|
-| `agents/Milo.md` (OpenClaw Milo, orchestrator) | `agents/Elon.md` | Renames Milo → Elon. Phase 5.1 dispatch discipline preserved. Model changes to `openai/gpt-5.5` via OAuth (tier-2: gpt-5.5-mini, tier-3: glm-5.1 via Z.ai). |
+| `agents/Milo.md` (OpenClaw Milo, orchestrator) | `agents/Elon.md` | Renames Milo → Elon. Phase 5.1 dispatch discipline preserved. Model changes to `openai-codex/gpt-5.5` via Codex OAuth (tier-2: ollama/kimi-k2.6:cloud, tier-3: zai/glm-5.1-turbo). |
 | `workspace/SOUL.md` (current Milo soul) | Split: `workspace-elon/SOUL.md` (inherits orchestrator discipline) + new `workspace/SOUL.md` for Nous Hermes Milo | Orchestration/HALT/complexity-scoring content goes to Elon; front-door intake content goes to new Milo. |
 | `agents/Zuck.md` (currently has old Hermes persona) | `agents/Zuck.md` full rewrite | Mark Zuckerberg archetype. Social publisher only. No email triage (Milo handles inbox). |
 | `AGENTS.md` | New Phase 6.0 roster + Milo/Elon split documentation | |
