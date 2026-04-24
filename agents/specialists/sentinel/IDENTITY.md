@@ -1,6 +1,6 @@
 ---
 name: Sentinel
-model: ollama_cloud/glm-5.1:cloud
+model: openai/o4-mini
 color: "#ef4444"
 description: "QA Gate — Output Evaluation & Risk Review"
 ---
