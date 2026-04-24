@@ -1,0 +1,25 @@
+{$OPENHERMES_DOMAIN} {
+	@chat_authorized {
+		path /chat/*
+		header Authorization "Bearer {$OPENHERMES_EDGE_TOKEN}"
+	}
+
+	handle @chat_authorized {
+		reverse_proxy milo:8787
+	}
+
+	@chat_unauthorized path /chat/*
+
+	handle @chat_unauthorized {
+		respond "unauthorized" 401
+	}
+
+	handle {
+		respond "not found" 404
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openhermes.milotheassistant.dev/schemas/handoff.schema.json",
+  "title": "OpenHermes Handoff Envelope",
+  "description": "Strict envelope for handoffs between OpenHermes agents.",
+  "type": "object",
+  "additionalProperties": false,
+  "$comment": "task_id must be a 26-character ULID using Crockford base32.",
+  "required": [
+    "task_id",
+    "origin_agent",
+    "target_agent",
+    "request_summary",
+    "governance_class",
+    "routing_profile",
+    "risk_level",
+    "requires_halt",
+    "budget",
+    "artifacts",
+    "status",
+    "next_action"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Stable ULID identifier for this handoff envelope."
+    },
+    "origin_agent": {
+      "type": "string",
+      "enum": [
+        "milo",
+        "elon",
+        "zuck",
+        "sagan",
+        "neo",
+        "sentinel",
+        "cortana",
+        "cornelius",
+        "kat"
+      ],
+      "description": "Agent that produced the handoff envelope."
+    },
+    "target_agent": {
+      "type": "string",
+      "enum": [
+        "milo",
+        "elon",
+        "zuck",
+        "sagan",
+        "neo",
+        "sentinel",
+        "cortana",
+        "cornelius",
+        "kat"
+      ],
+      "description": "Agent that is expected to receive and act on the handoff envelope."
+    },
+    "request_summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "description": "Human-readable summary of the requested work."
+    },
+    "governance_class": {
+      "type": "string",
+      "enum": [
+        "info",
+        "action",
+        "publish",
+        "irreversible"
+      ],
+      "description": "Governance sensitivity class for the handoff."
+    },
+    "routing_profile": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Routing profile name chosen for the handoff."
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "description": "Risk level assessed for the requested work."
+    },
+    "requires_halt": {
+      "type": "boolean",
+      "description": "Whether execution must halt for review or approval before continuing."
+    },
+    "budget": {
+      "type": "object",
+      "description": "Execution budget applied to the handoff.",
+      "additionalProperties": false,
+      "$comment": "All budget limits are required positive integers.",
+      "required": [
+        "max_tokens",
+        "max_seconds",
+        "max_tool_calls"
+      ],
+      "properties": {
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum tokens that may be consumed while handling the handoff."
+        },
+        "max_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum wall-clock seconds allowed for the handoff."
+        },
+        "max_tool_calls": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum number of tool calls allowed for the handoff."
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Structured artifacts already attached to the handoff.",
+      "items": {
+        "type": "object",
+        "description": "Artifact payload object. Shape is determined by the producing subsystem."
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "awaiting_approval",
+        "complete",
+        "halted",
+        "failed"
+      ],
+      "description": "Current lifecycle state of the handoff."
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Immediate next action expected from the receiving agent."
+    },
+    "audit": {
+      "type": "object",
+      "description": "Optional audit metadata captured when the handoff is created.",
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation time in ISO 8601 date-time format."
+        },
+        "created_by": {
+          "type": "string",
+          "description": "Human or system principal that created the envelope."
+        },
+        "trace_id": {
+          "type": "string",
+          "description": "Trace identifier used to correlate related events."
+        }
+      }
+    }
+  }
+}
