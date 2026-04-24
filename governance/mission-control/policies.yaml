@@ -1,0 +1,137 @@
+# Mission Control governance policies
+#
+# Four policy blocks mapping the bridge classifier's governance_class
+# output to Mission Control approval records. Consumed by mc-push.sh
+# via the `approval` subcommand and by Milo/Elon routing logic.
+#
+# Policy format reference:
+#   - name           short unique policy id
+#   - trigger        match criteria (governance_class, tool pattern, etc.)
+#   - action         what happens when trigger fires (require_approval /
+#                    enforce / scan_and_redact)
+#   - approver       which agent reviews (sentinel for QA, user for
+#                    irreversible, optional)
+#   - action_type    matches mc-push.sh approval --action-type enum
+#   - mc_board       which MC board receives the approval record
+#   - confidence     0.0-1.0 lead-confidence hint for the approver
+
+policies:
+
+  # ---------------------------------------------------------------------
+  # 1. Publish — any external post goes through MC approval before Zuck
+  # executes the publish call.
+  # ---------------------------------------------------------------------
+  - name: publish_requires_mc_approval
+    trigger:
+      governance_class: publish
+    action: require_approval
+    approver: sentinel
+    action_type: publish
+    mc_board: approvals
+    confidence: 0.9
+    notes: |
+      Triggered whenever classify.py returns governance_class=publish.
+      Zuck is memory-firewalled and can ONLY post after this approval
+      resolves. If Sentinel rejects, Elon discards the publish_packet
+      and reports back to Milo.
+
+  # ---------------------------------------------------------------------
+  # 2. Irreversible — infra changes, secret rotations, deletions, financial
+  # actions. Requires MC approval + explicit user confirm in chat.
+  # ---------------------------------------------------------------------
+  - name: irreversible_requires_mc_plus_user
+    trigger:
+      governance_class: irreversible
+    action: require_approval_and_halt
+    approver: sentinel
+    action_type: infra_change
+    mc_board: approvals
+    confidence: 0.95
+    notes: |
+      Highest tier. Execution HALTS until BOTH conditions are met:
+        (a) Sentinel approves via MC (action_type=infra_change)
+        (b) User confirms in chat via explicit "yes, proceed" reply
+      Either condition failing aborts the operation. This is
+      non-negotiable and cannot be bypassed by the orchestrator.
+
+  # ---------------------------------------------------------------------
+  # 3. PII scan — every outbound message (Zuck publish, Milo email send,
+  # Hermes Discord message) passes through the sanitizer first. Detected
+  # PII is redacted unless the user has explicitly cleared the content.
+  # ---------------------------------------------------------------------
+  - name: pii_scan_outbound
+    trigger:
+      tool_pattern:
+        - "zuck.*"
+        - "milo.send_message"
+        - "milo.send_email"
+        - "hermes.send_*"
+    action: scan_and_redact
+    sanitizer: bridge/scripts/sanitize-memory.py
+    patterns:
+      - email_address
+      - phone_number
+      - ssn
+      - credit_card
+      - api_key
+      - oauth_token
+    notes: |
+      Uses the same sanitizer library as the memory contract (Phase 9).
+      Categories detected: credentials, deceptive unicode, role-hijack
+      markers. Blocked-severity content cannot go outbound without
+      explicit user override.
+
+  # ---------------------------------------------------------------------
+  # 4. Budget enforcement — every handoff envelope declares a budget
+  # (max_tokens, max_seconds, max_tool_calls). Exceeding any budget
+  # kills the session and reports back to Milo.
+  # ---------------------------------------------------------------------
+  - name: budget_enforcement
+    trigger:
+      origin_agent_any: true  # all origin agents
+    action: enforce_budget
+    source: handoff_envelope.budget
+    notes: |
+      Budget fields are required in the handoff envelope (enforced by
+      bridge/schemas/handoff.schema.json). A run exceeding max_tokens,
+      max_seconds, or max_tool_calls terminates with status=failed and
+      a reason of "budget_exceeded_{field}". Partial work is preserved
+      for review; the session key is logged.
+
+# =====================================================================
+# Audit sink
+# =====================================================================
+
+audit:
+  sink: governance/audit/mission-control.jsonl
+  format: ndjson
+  immutable: true
+  rotation: weekly
+  checksum_script: scripts/observability/audit-checksum.sh
+  notes: |
+    Every approval decision, policy trigger, and budget violation is
+    appended as a single JSON line. The sink file is treated as
+    immutable — rewrites are rejected by the commit hook. Weekly
+    SHA-256 checksum is computed and committed to the repo at
+    governance/audit/checksums.sha256 for tamper evidence.
+
+# =====================================================================
+# Per-agent credential attribution
+# =====================================================================
+# Referenced by mc-push.sh and by the bridge when dispatching writes.
+# Each agent uses its own bearer token for outbound API calls so audit
+# logs separate writer identity cleanly. Tokens live in
+# ~/.openclaw/secrets.json (chmod 600, not in repo).
+
+credentials:
+  zuck:
+    twitter_token_env: ZUCK_TWITTER_TOKEN
+    linkedin_token_env: ZUCK_LINKEDIN_TOKEN
+  milo:
+    gmail_token_env: MILO_GMAIL_TOKEN
+    slack_token_env: MILO_SLACK_TOKEN
+    discord_token_env: DISCORD_BOT_TOKEN        # inherited from OpenClaw secrets
+    telegram_token_env: TELEGRAM_BOT_TOKEN       # inherited from OpenClaw secrets
+  cortana:
+    mc_auth_token_env: MISSION_CONTROL_AUTH_TOKEN
+    # Cortana uses the same MC token as the system — it's the audit writer
