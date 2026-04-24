@@ -219,6 +219,19 @@ Already documented in Section 3 (Keep/Rewrite/Discard Matrix). This phase is the
 
 **Gate 5:** Elon boots on gpt-5.5 via OAuth, tier-2 and tier-3 fallbacks tested by simulated primary failure, no disruption to specialists.
 
+**Phase 5 evaluation pool benchmark (parallel with the above):**
+
+Two candidate models are pulled via Ollama Pro and registered in `openclaw.json` but not yet assigned to any agent role:
+
+- `ollama/kimi-k2.6:cloud` (1.04T INT4, 262k ctx, vision + thinking + tools) — candidate: **Neo cloud fallback** replacing local `qwen3.6:35b-a3b-q4_K_M`
+- `ollama/deepseek-v4-flash:cloud` (158B FP8, 1M ctx, thinking + tools) — candidate: **Sagan long-doc research lane** replacing `openai/gpt-5.5` for routine research
+
+Benchmark approach during Phase 5:
+1. Dispatch identical engineering prompts to Neo primary (NIM qwen3-coder-480b) AND Kimi K2.6 via cron → compare output quality/latency
+2. Dispatch identical long-doc research tasks to gpt-5.5 AND DeepSeek V4-flash → compare fidelity/latency/cost
+
+Promotion to committed role is a simple `openclaw.json` edit + matrix doc update. Demotion is the same edit reversed. Evaluation Pool is fully reversible — no architectural commitment until benchmarks prove value. See `docs/architecture/Agent_Model_Routing_Matrix.md` → "Evaluation Pool" section for details.
+
 ### Phase 6 — Manual Milo persona migration
 
 **Intent:** Nous Hermes doesn't have a `claw migrate` command. Migration is manual. Start with Nous Hermes's default persona; layer in the 8 GOTCHA anchors from Section 4; selectively preserve user-relationship details (John's name, timezone, channel preferences) extracted from OpenClaw Milo's workspace.
