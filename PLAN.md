@@ -232,15 +232,17 @@ Benchmark approach during Phase 5:
 
 Promotion to committed role is a simple `openclaw.json` edit + matrix doc update. Demotion is the same edit reversed. Evaluation Pool is fully reversible — no architectural commitment until benchmarks prove value. See `docs/architecture/Agent_Model_Routing_Matrix.md` → "Evaluation Pool" section for details.
 
-### Phase 6 — Manual Milo persona migration
+### Phase 6 — Milo persona refinement (POST-claw-migrate)
 
-**Intent:** Nous Hermes doesn't have a `claw migrate` command. Migration is manual. Start with Nous Hermes's default persona; layer in the 8 GOTCHA anchors from Section 4; selectively preserve user-relationship details (John's name, timezone, channel preferences) extracted from OpenClaw Milo's workspace.
+**Correction:** Nous Hermes **does** have a `hermes claw migrate` tool — Phase 4 used it with `--preset user-data` to import memory/USER/config/MCP servers/providers/skills. The SOUL conflict was correctly skipped so the default Hermes persona remains in place for this phase's anchor injection.
 
-**Steps:**
-1. Read `~/.openclaw/workspace/USER.md` (OpenClaw Milo's user context) — extract factual user details (name, timezone, channel preferences)
-2. Write `~/.hermes/memories/USER.md` with those details — factual only, no inherited personality
-3. Write `~/.hermes/memories/MEMORY.md` as empty/seed — new Milo starts fresh on memory
-4. Write `~/.hermes/memories/SOUL.md` (if Nous Hermes uses that convention) or equivalent — default persona + Section 4 GOTCHA anchors
+**Intent:** Take the Nous Hermes default SOUL (preserved through Phase 4 migration), layer in the 8 GOTCHA anchors from Section 4, and verify the migrated memory/USER files don't carry OpenClaw-Milo-orchestrator baggage that would confuse the new Milo's role (he delegates to Elon now).
+
+**Steps (revised post-Phase-4):**
+1. Read current `~/.hermes/memories/USER.md` (57 lines, imported via `claw migrate`) — verify factual user details are correct, no leftover agent-role content
+2. Read current `~/.hermes/memories/MEMORY.md` (57 lines, imported) — scrub or flag entries that describe OpenClaw Milo as orchestrator (New Milo delegates to Elon; doesn't orchestrate directly)
+3. Append the 8 GOTCHA anchors from Section 4 to `~/.hermes/SOUL.md` — preserve the default Hermes persona already there, add the anchors as an explicit "Boundaries / Operating Rules" section
+4. Optional: customize name field in SOUL.md from generic "Hermes Agent" to "Milo" since that's John's front-door identity
 5. Review with user before any traffic is routed to new Milo
 
 **Gate 6:** User confirms Nous Hermes Milo's persona + USER details before traffic flows.
