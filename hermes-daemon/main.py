@@ -21,7 +21,30 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
+# Suppress httpx URL logging — Telegram bot tokens live in the path component
+# and would otherwise be written in plaintext to stdout / the LaunchAgent log.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+# Even WARNING-level httpx errors echo the URL. Install a filter that redacts
+# anything that looks like a bot token (`/bot<digits>:<alnum>`).
+import re as _re
+_TOKEN_RE = _re.compile(r"/bot\d+:[A-Za-z0-9_-]+")
+
+
+class _RedactTokens(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        if "/bot" in msg:
+            record.msg = _TOKEN_RE.sub("/bot<REDACTED>", msg)
+            record.args = ()
+        return True
+
+
+for _name in ("httpx", "httpcore", "telegram", "discord"):
+    logging.getLogger(_name).addFilter(_RedactTokens())
+
 log = logging.getLogger("hermes-daemon")
+log.addFilter(_RedactTokens())
 
 
 class ChatRequest(BaseModel):

@@ -46,19 +46,31 @@ async def _run_argv(argv: list[str], stdin_text: str | None = None, timeout: flo
 
 
 async def sanitize(text: str) -> dict:
-    """Run the prompt-injection sanitizer. Returns the parsed envelope."""
+    """Run the prompt-injection sanitizer. Returns a normalized envelope:
+       {severity: safe|suspicious|blocked, sanitized_text: str, findings: list}.
+
+    The script reads JSON `{"content": "..."}` on stdin and emits a `verdict`
+    object (`{"verdict": ..., "findings": ..., "sanitized_text": ...}`).
+    We translate `verdict` → `severity` for the daemon's call site.
+    """
     script = BRIDGE_DIR / "sanitize-memory.py"
     if not script.exists():
         log.warning("sanitizer not found at %s; passing through", script)
         return {"severity": "safe", "sanitized_text": text, "findings": []}
-    rc, out, err = await _run_argv(["python3", str(script), "--stdin"], stdin_text=text, timeout=15)
+    payload = json.dumps({"content": text})
+    rc, out, err = await _run_argv(["python3", str(script)], stdin_text=payload, timeout=15)
     if rc != 0:
-        log.warning("sanitizer exited %d: %s", rc, err)
-        return {"severity": "suspicious", "sanitized_text": text, "findings": [f"sanitizer-error: {err.strip()}"]}
+        log.warning("sanitizer exited %d: %s", rc, err.strip()[:300])
+        return {"severity": "suspicious", "sanitized_text": text, "findings": [{"sanitizer_error": err.strip()[:300]}]}
     try:
-        return json.loads(out)
+        parsed = json.loads(out)
     except json.JSONDecodeError:
         return {"severity": "safe", "sanitized_text": text, "findings": []}
+    return {
+        "severity": parsed.get("verdict", "safe"),
+        "sanitized_text": parsed.get("sanitized_text", text),
+        "findings": parsed.get("findings", []),
+    }
 
 
 async def respond(text: str, source: Source, user_id: str) -> str:
