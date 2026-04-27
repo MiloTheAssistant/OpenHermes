@@ -138,6 +138,24 @@ emit "- Disk (\$HOME): $disk"
 emit "- RAM: ${mem_total_mb} MB total"
 emit ""
 
+# ─── Milo daemon (Hermes front door) ──────────────────────────────────────
+emit "### Milo daemon (Hermes front door)"
+milo_health="$(curl -fsS --max-time 3 http://127.0.0.1:18790/health 2>/dev/null || echo '')"
+if [ -n "$milo_health" ]; then
+  milo_ok="$(printf '%s' "$milo_health" | python3 -c 'import json,sys; print("yes" if json.loads(sys.stdin.read()).get("ok") else "no")' 2>/dev/null || echo "?")"
+  milo_channels="$(printf '%s' "$milo_health" | python3 -c 'import json,sys
+d=json.loads(sys.stdin.read()).get("channels",{})
+print(", ".join(k for k,v in d.items() if v) or "none")' 2>/dev/null || echo "?")"
+  if [ "$milo_ok" = "yes" ]; then
+    emit "- $(green "OK") · channels: **$milo_channels**"
+  else
+    emit "- $(red "Milo daemon responded but reports not OK")"
+  fi
+else
+  emit "- $(red "Milo daemon not reachable at 127.0.0.1:18790")"
+fi
+emit ""
+
 # ─── Audit checksum (tamper evidence) ─────────────────────────────────────
 emit "### Audit checksum"
 checksum_script="${OPENHERMES_REPO}/scripts/observability/audit-checksum.sh"

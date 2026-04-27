@@ -9,14 +9,14 @@ This is the final phase. Three deliverables: parallel multi-agent validation (th
 
 ## 12.1 — Channels: routing intact via OpenClaw
 
+> **Superseded by Phase 13** (2026-04-27): channel inbound now routes to the Milo daemon (`hermes-daemon` on `127.0.0.1:18790`), not the OpenClaw gateway. OpenClaw `channels.{telegram,discord}.enabled` is now `false`. See `PHASE_13_FRONT_DOOR.md`. Original Phase 12 state preserved below for history.
+
 | Channel | State | Token | Routes to | Display name |
 |---|---|---|---|---|
 | Discord | ON / OK | configured (72-char bot token) | OpenClaw `main` agent | "Elon" today (post-Phase-5 rename) |
 | Telegram | ON / OK | configured (46-char bot token) | OpenClaw `main` agent | "Elon" today |
 
-Both channels are operational. Channel→Milo (Nous Hermes) bridge is **deferred to a Phase 13 follow-on**: today, channel inbound traffic hits OpenClaw's main agent (now named Elon, runs gpt-5.5 via Codex OAuth). The Nous Hermes Milo on host is invoked manually via `uv run hermes chat` for direct CLI sessions. Both work; they're just disconnected paths.
-
-This was a deliberate scope choice — bridging requires either running Nous Hermes as a daemon listening for OpenClaw webhooks or repointing channel handlers via a forwarding script. Neither was justified for launch given the user's "channels are a small part" framing.
+Both channels were operational at Phase 12 launch. The Channel→Milo bridge that was deferred here became Phase 13.
 
 ## 12.2 — Multi-agent parallel validation (the real goal)
 

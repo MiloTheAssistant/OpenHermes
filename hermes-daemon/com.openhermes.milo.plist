@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.openhermes.milo — LaunchAgent for the Milo daemon (Phase 13).
+
+  Install:
+    cp com.openhermes.milo.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.openhermes.milo.plist
+    launchctl enable gui/$UID/com.openhermes.milo
+    launchctl kickstart -k gui/$UID/com.openhermes.milo
+
+  Logs:
+    ~/.openhermes/logs/milo-daemon.out
+    ~/.openhermes/logs/milo-daemon.err
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.openhermes.milo</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>cd $HOME/repos/OpenHermes/hermes-daemon &amp;&amp; exec uv run --project . uvicorn main:app --host 127.0.0.1 --port 18790</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Volumes/BotCentral/Users/milo/.openhermes/logs/milo-daemon.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Volumes/BotCentral/Users/milo/.openhermes/logs/milo-daemon.err</string>
+
+    <key>WorkingDirectory</key>
+    <string>/Volumes/BotCentral/Users/milo/repos/OpenHermes/hermes-daemon</string>
+</dict>
+</plist>

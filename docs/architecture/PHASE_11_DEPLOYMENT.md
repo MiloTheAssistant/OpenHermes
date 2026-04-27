@@ -32,7 +32,7 @@ On audit, none of that work measurably improved our security posture. The real g
 |---|---|---|---|
 | **Mission Control** (postgres, redis, FastAPI backend, Next.js frontend, webhook worker) | **OrbStack containers** — 5-container stack at `~/repos/openclaw-mission-control/compose.yml` | `:3100` (UI), `:8000` (API), `:5432` (DB loopback), `:6379` (Redis loopback) | Multi-service web app. Naturally container-shaped. Was already live. |
 | **OpenClaw gateway (Elon + 7 specialists)** | **Host native** via macOS LaunchAgent | `127.0.0.1:18789` (loopback-only by OpenClaw design) | Deep integration: LaunchAgent, local Ollama at `:11434`, Codex OAuth via `~/.codex/auth.json`, per-agent SQLite memory at `~/.openclaw/memory/*.sqlite`, macOS notifications. Containerizing imposes friction with zero reward. |
-| **Nous Hermes (Milo)** | **Host native** via `uv run hermes` | No daemon port (CLI + ad-hoc invocations) | Single-user interactive tool. Host is the upstream-recommended deployment for personal use. |
+| **Nous Hermes (Milo)** | **Host native** via `uv run hermes` (CLI) AND **`hermes-daemon` LaunchAgent** as of Phase 13 | CLI for terminal use; daemon on `127.0.0.1:18790` for Telegram/Discord/Mission-Control inbound | Phase 13 added the daemon to put Milo in front of channels. CLI remains for direct interactive use. See `PHASE_13_FRONT_DOOR.md`. |
 | **Caddy reverse proxy** | **Not deployed** | — | No public exposure. LAN-only + Mac Mini. Revisit if Tailscale or public ingress is introduced later. |
 
 ### Why this topology is correct
