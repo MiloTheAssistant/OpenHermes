@@ -79,13 +79,17 @@ main() {
     } >"$tmp"
   fi
 
-  # Tamper detection: if CHECKSUM_FILE exists and CI-mode is on, ensure
-  # the new file matches an existing one (or exits 2 on drift).
+  # Tamper detection: if CHECKSUM_FILE exists and CI-mode is on, compare
+  # only the hash lines (skip the header timestamp which changes every run).
+  # Drift in the hash lines = real tamper; drift in the header is benign.
   if [ -f "$CHECKSUM_FILE" ] && [ "${CHECKSUM_FAIL_ON_DRIFT:-0}" = "1" ]; then
-    if ! diff -q "$CHECKSUM_FILE" "$tmp" >/dev/null 2>&1; then
-      printf '[audit-checksum] TAMPER DETECTED — checksums differ from committed\n' >&2
-      printf '[audit-checksum] diff:\n' >&2
-      diff "$CHECKSUM_FILE" "$tmp" >&2 || true
+    local existing_hashes new_hashes
+    # grep -v exits 1 when no lines match; tolerate that with `|| true`
+    existing_hashes="$(grep -v '^#' "$CHECKSUM_FILE" 2>/dev/null | sort || true)"
+    new_hashes="$(grep -v '^#' "$tmp" 2>/dev/null | sort || true)"
+    if [ "$existing_hashes" != "$new_hashes" ]; then
+      printf '[audit-checksum] TAMPER DETECTED — hash lines differ from committed\n' >&2
+      diff <(printf '%s\n' "$existing_hashes") <(printf '%s\n' "$new_hashes") >&2 || true
       exit 2
     fi
   fi
@@ -98,7 +102,7 @@ main() {
   # Stage for commit if we're in a git tree — actual commit is a separate
   # decision (weekly cron should git-add + git-commit; CI just verifies).
   if git -C "$OPENHERMES_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
-    git -C "$OPENHERMES_ROOT" add "$CHECKSUM_FILE" 2>&1 | head
+    git -C "$OPENHERMES_ROOT" add "$CHECKSUM_FILE" >/dev/null 2>&1 || true
   fi
 
   return 0
