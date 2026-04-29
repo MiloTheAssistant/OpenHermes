@@ -79,18 +79,21 @@ async def respond(text: str, source: Source, user_id: str) -> str:
     Uses verified Hermes CLI flags from `hermes chat --help`:
       -Q              quiet/programmatic mode (no banner/spinner/tool previews)
       -q QUERY        single non-interactive query
+      -t hermes-cli   minimal toolset — auto-loaded toolsets (browser, vision,
+                      gmail, image_gen, etc.) add ~3s of import overhead per
+                      turn. SOUL.md (Milo persona) is still injected.
       --source TAG    session source tag (filtering)
-      --continue NAME resume session by name (best-effort; falls back if absent)
 
-    Phase 13 v1: each turn is a fresh single-query subprocess. Per-user session
-    continuity via `--continue {source}-{user_id}` will be wired in Phase 14
-    once we verify Hermes session-name semantics empirically.
+    Phase 13 v1: each turn is a fresh single-query subprocess. Phase 14 should
+    move to a persistent worker (Hermes SDK `AIAgent.chat()`) to drop the
+    Python startup cost entirely.
     """
+    import time as _time
     findings = await sanitize(text)
     if findings.get("severity") == "blocked":
         return (
             "Milo blocked this message — looked like a prompt-injection "
-            "attempt. Findings: " + ", ".join(findings.get("findings", []))
+            "attempt. Findings: " + ", ".join(str(f) for f in findings.get("findings", []))
         )
     sanitized = findings.get("sanitized_text", text)
 
@@ -103,16 +106,20 @@ async def respond(text: str, source: Source, user_id: str) -> str:
         "-Q",
         "--provider", "ollama-cloud",
         "-m", "minimax-m2.7:cloud",
+        "-t", "hermes-cli",
         "--source", source,
         "-q", sanitized,
     ]
+    started = _time.monotonic()
     log.info("dispatching to Milo (session_tag=%s, len=%d)", session_tag, len(sanitized))
     rc, out, err = await _run_argv(argv, timeout=600)
+    elapsed_ms = int((_time.monotonic() - started) * 1000)
     if rc != 0:
-        log.error("hermes exit %d, stderr=%s", rc, err[:500])
+        log.error("hermes exit %d after %dms, stderr=%s", rc, elapsed_ms, err[:500])
         return f"Milo errored (rc={rc}). Check ~/.hermes/logs/. Stderr: {err.strip()[:300]}"
 
     cleaned = _strip_ansi(out).strip()
+    log.info("Milo replied (session_tag=%s, %dms, reply_len=%d)", session_tag, elapsed_ms, len(cleaned))
     return cleaned or "(Milo returned an empty response)"
 
 
